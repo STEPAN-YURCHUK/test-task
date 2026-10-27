@@ -1,0 +1,9 @@
+node_modules
+dist
+dist-e2e
+coverage
+uploads
+.env
+.development.env
+.test.env
+.load.env
