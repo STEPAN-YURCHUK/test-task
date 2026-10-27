@@ -1,0 +1,14 @@
+{
+  "name": "comments-load",
+  "private": true,
+  "type": "module",
+  "description": "Нагрузочное тестирование: 1M комментариев, чтение (Meilisearch / Postgres), запись, голоса, WebSocket fan-out",
+  "scripts": {
+    "seed": "node seed.mjs",
+    "run": "node run.mjs"
+  },
+  "devDependencies": {
+    "autocannon": "^8.0.0",
+    "socket.io-client": "^4.8.4"
+  }
+}

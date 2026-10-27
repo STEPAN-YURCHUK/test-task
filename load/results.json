@@ -1,0 +1,94 @@
+{
+  "date": "2026-10-26T18:18:27.106Z",
+  "duration_s": 20,
+  "results": {
+    "read via Meilisearch: page 1, LIFO": {
+      "rps": 2380,
+      "p50_ms": 40,
+      "p97_5_ms": 56,
+      "p99_ms": 69,
+      "max_ms": 233,
+      "requests": 47599,
+      "non2xx": 0,
+      "errors": 0
+    },
+    "read via Meilisearch: realistic mix (90% p1-3, 9% p4-50, 1% deep)": {
+      "rps": 1170,
+      "p50_ms": 78,
+      "p97_5_ms": 128,
+      "p99_ms": 144,
+      "max_ms": 1590,
+      "requests": 23395,
+      "non2xx": 0,
+      "errors": 0
+    },
+    "read via Meilisearch: random page 1..12000 × random sort": {
+      "rps": 89,
+      "p50_ms": 1387,
+      "p97_5_ms": 1664,
+      "p99_ms": 1718,
+      "max_ms": 1967,
+      "requests": 1781,
+      "non2xx": 0,
+      "errors": 0
+    },
+    "read via Postgres (Meili down): page 1, LIFO": {
+      "rps": 37,
+      "p50_ms": 2098,
+      "p97_5_ms": 4262,
+      "p99_ms": 4819,
+      "max_ms": 4838,
+      "requests": 747,
+      "non2xx": 0,
+      "errors": 0
+    },
+    "read via Postgres (Meili down): realistic mix (90% p1-3, 9% p4-50, 1% deep)": {
+      "rps": 35,
+      "p50_ms": 2238,
+      "p97_5_ms": 4072,
+      "p99_ms": 5304,
+      "max_ms": 5353,
+      "requests": 707,
+      "non2xx": 0,
+      "errors": 0
+    },
+    "read via Postgres (Meili down): random page 1..12000 × random sort": {
+      "rps": 9,
+      "p50_ms": 8732,
+      "p97_5_ms": 9645,
+      "p99_ms": 9668,
+      "max_ms": 9679,
+      "requests": 175,
+      "non2xx": 0,
+      "errors": 50
+    },
+    "write: captcha + POST comment (25 concurrent)": {
+      "rps": 470,
+      "p50_ms": 48,
+      "p95_ms": 94,
+      "p99_ms": 125,
+      "created": 9415,
+      "failed": 0
+    },
+    "votes: PUT like/dislike (300 voters × top comments)": {
+      "rps": 1068,
+      "p50_ms": 43,
+      "p97_5_ms": 77,
+      "p99_ms": 101,
+      "max_ms": 151,
+      "requests": 21350,
+      "non2xx": 0,
+      "errors": 0
+    },
+    "websocket fan-out: 1000 clients × 20 comments": {
+      "clients": 1000,
+      "connected": 1000,
+      "connect_failed": 0,
+      "messages": 20,
+      "delivered_pct": 100,
+      "p50_ms": 19,
+      "p95_ms": 31,
+      "p99_ms": 39
+    }
+  }
+}
