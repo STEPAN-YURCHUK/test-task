@@ -1,0 +1,16 @@
+{
+    "moduleFileExtensions": ["js", "json", "ts"],
+    "rootDir": ".",
+    "testRegex": ".e2e-spec.ts$",
+    "transform": {
+        "^.+\\.(t|j)s$": "ts-jest"
+    },
+    "moduleNameMapper": {
+        "^src/(.*)$": "<rootDir>/../src/$1",
+        "^@scalar/nestjs-api-reference$": "<rootDir>/stubs/scalar-api-reference.stub.ts"
+    },
+    "setupFiles": ["<rootDir>/helpers/setup-env.ts"],
+    "testEnvironment": "node",
+    "testTimeout": 60000,
+    "maxWorkers": 1
+}
