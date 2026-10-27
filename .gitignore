@@ -1,0 +1,18 @@
+.DS_Store
+.idea/
+.vscode/
+*.log
+node_modules/
+coverage/
+
+# локальные заметки для ассистента
+CLAUDE.md
+.claude/
+
+# env с настоящими значениями не коммитятся — в репозитории только шаблоны *.example
+.env
+.env.*
+*.env
+!.env.example
+!*.env.example
+!docker/empty.env
