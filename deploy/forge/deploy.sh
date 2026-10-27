@@ -17,9 +17,14 @@ COMPOSE_VERSION=$(docker compose version --short 2>/dev/null | sed 's/^v//')
 printf '%s\n2.24.0\n' "$COMPOSE_VERSION" | sort -V -C 2>/dev/null && [ "$COMPOSE_VERSION" != "2.24.0" ] \
     && fail "нужен Docker Compose ≥ 2.24, установлен $COMPOSE_VERSION: sudo apt-get install -y docker-compose-plugin"
 
-# Корень сайта (/home/forge/<домен>) — родитель папки releases/. $FORGE_SITE_PATH указывает на current/,
-# то есть внутрь конкретного релиза: то, что лежит там, пропадёт со следующим деплоем
-SITE_ROOT=$(dirname "$(dirname "$FORGE_RELEASE_DIRECTORY")")
+# Корень сайта (/home/forge/<домен>) — где лежат releases/ и current. Секреты храним там, а не в current/:
+# current — ссылка на релиз, после $ACTIVATE_RELEASE() она указывает на новую папку без файла
+case "$FORGE_RELEASE_DIRECTORY" in
+    */releases/*) SITE_ROOT="${FORGE_RELEASE_DIRECTORY%%/releases/*}" ;;
+    *) SITE_ROOT="${FORGE_SITE_PATH%/}"; SITE_ROOT="${SITE_ROOT%/current}" ;;
+esac
+[ -d "$SITE_ROOT" ] || fail "не удалось определить папку сайта ($SITE_ROOT)"
+echo "Папка сайта: $SITE_ROOT"
 
 # Env сайта из вкладки Environment (Forge линкует его в релиз)
 ENV_FILE="$FORGE_RELEASE_DIRECTORY/.env"
