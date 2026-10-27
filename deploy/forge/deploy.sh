@@ -1,4 +1,6 @@
 # Deploy-скрипт для Laravel Forge (Site → Deployments → Deploy script). Копия здесь — для истории изменений.
+# Макросы Forge (создание и активация релиза) встречаются в файле ровно по одному разу — Forge подставляет только первое
+# вхождение, поэтому их нельзя упоминать в комментариях.
 # Всё приложение — в Docker: postgres, redis, meilisearch, storage (S3), back, front (docker-compose.yml + docker-compose.prod.yml).
 # nginx Forge проксирует на контейнеры: фронт 127.0.0.1:4008, API и WebSocket 127.0.0.1:4009, файлы 127.0.0.1:4010 (см. nginx.conf).
 # Файлы — в локальном S3 (SeaweedFS) в том же compose. Переменные — вкладка Environment сайта (шаблон: forge.env.example).
@@ -18,7 +20,7 @@ printf '%s\n2.24.0\n' "$COMPOSE_VERSION" | sort -V -C 2>/dev/null && [ "$COMPOSE
     && fail "нужен Docker Compose ≥ 2.24, установлен $COMPOSE_VERSION: sudo apt-get install -y docker-compose-plugin"
 
 # Корень сайта (/home/forge/<домен>) — где лежат releases/ и current. Секреты храним там, а не в current/:
-# current — ссылка на релиз, после $ACTIVATE_RELEASE() она указывает на новую папку без файла
+# current — ссылка на релиз, после активации она указывает на новую папку без файла
 case "$FORGE_RELEASE_DIRECTORY" in
     */releases/*) SITE_ROOT="${FORGE_RELEASE_DIRECTORY%%/releases/*}" ;;
     *) SITE_ROOT="${FORGE_SITE_PATH%/}"; SITE_ROOT="${SITE_ROOT%/current}" ;;
