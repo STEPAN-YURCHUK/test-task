@@ -2,6 +2,7 @@ import request = require('supertest');
 import { Sequelize } from 'sequelize-typescript';
 import { MeiliIndexEnum } from 'src/infrastructure/meilisearch/enums/meili-index.enum';
 import { MeiliSearchService } from 'src/infrastructure/meilisearch/services/meilisearch.service';
+import { DisposableEmailService } from 'src/infrastructure/disposable-email/services/disposable-email.service';
 import { CommentMeilisearchService } from 'src/modules/comment-manager/comment/services/comment-meilisearch.service';
 import { postComment } from './helpers/factories';
 import { createTestApp, TestApp } from './helpers/test-app';
@@ -41,6 +42,26 @@ describe('Comments (e2e)', () => {
             const second = await postComment(t, { userName: 'Same1', email: 'same@example.com' }).expect(201);
 
             expect(second.body.user.homePage).toBe('https://same.dev');
+        });
+
+        it('временный e-mail (в том числе поддомен сервиса) → 400 disposable_email_not_allowed, комментарий не создаётся', async () => {
+            const fetchSpy = jest
+                .spyOn(globalThis, 'fetch')
+                .mockImplementation(async () => new Response('mailinator.com\nyopmail.com\n', { status: 200 }));
+            await t.app.get(DisposableEmailService).refresh();
+            fetchSpy.mockRestore();
+
+            for (const email of ['spam@mailinator.com', 'spam@eu.yopmail.com']) {
+                const res = await postComment(t, { email }).expect(400);
+                expect(res.body).toMatchObject({
+                    status: 400,
+                    code: 'disposable_email_not_allowed',
+                    message: expect.stringContaining('Temporary email'),
+                });
+            }
+            await postComment(t, { email: 'real@gmail.com' }).expect(201);
+            await t.waitForIndex();
+            expect((await api().get('/api/v1/comments')).body.items.map((i: any) => i.user.email)).toEqual(['real@gmail.com']);
         });
 
         it('новая Home page автора видна во всех его комментариях — и из Meilisearch, и из Postgres', async () => {

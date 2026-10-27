@@ -63,9 +63,10 @@ export const ApiClientCreateCommentDocs = () =>
         ApiCreatedResponse({ description: 'Comment created', type: CommentResponse }),
         ApiBadRequestResponse({
             description:
-                'Validation failed (`not_valid_data` with `errors`), wrong/expired CAPTCHA, bad file or `file` together with `uploadId`',
+                'Validation failed (`not_valid_data` with `errors`), temporary (disposable) e-mail, wrong/expired CAPTCHA, bad file or `file` together with `uploadId`',
             ...errorExamples(400, [
                 'not_valid_data',
+                'disposable_email_not_allowed',
                 'captcha_invalid',
                 'captcha_expired',
                 'conflicting_file_sources',

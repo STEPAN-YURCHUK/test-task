@@ -11,6 +11,7 @@ import { DatabaseModule } from './infrastructure/database/database.module';
 import { AwsS3Module } from './infrastructure/aws-s3/aws-s3.module';
 import { JwtTokenModule } from './infrastructure/jwt-token/jwt-token.module';
 import { MeilisearchModule } from './infrastructure/meilisearch/meilisearch.module';
+import { DisposableEmailModule } from './infrastructure/disposable-email/disposable-email.module';
 import { RedisModule } from './infrastructure/redis/redis.module';
 import { CaptchaManagerModule } from './modules/captcha-manager/captcha-manager.module';
 import { CommentManagerModule } from './modules/comment-manager/comment-manager.module';
@@ -43,6 +44,7 @@ import { LocalizationModule } from './shared/localization/localization.module';
         JwtTokenModule,
         AwsS3Module,
         RedisModule,
+        DisposableEmailModule,
         FileModule,
         MeilisearchModule,
         UserManagerModule,

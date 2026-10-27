@@ -123,6 +123,7 @@ export function CommentForm({ parentUuid, onCreated, onCancel }: Props) {
           fieldErrors[field as keyof FormErrors] = messages[0];
         }
         if (err.code === 'captcha_invalid' || err.code === 'captcha_expired') fieldErrors.captcha = err.message;
+        if (err.code === 'disposable_email_not_allowed') fieldErrors.email = err.message;
         if (err.code?.startsWith('file_')) {
           fieldErrors.file = err.message;
           // одноразовая загрузка потеряна (истекла / уже использована) — файл нужно загрузить заново

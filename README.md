@@ -13,6 +13,7 @@
 |---|---|
 | Форма: User Name, E-mail, Home page, CAPTCHA, Text | Валидация на клиенте (`front/src/lib/validation.ts`) и на сервере (`class-validator` DTO) |
 | CAPTCHA (изображение, латиница и цифры) | SVG-картинка + подписанный JWT с HMAC ответа; токен одноразовый (использованные `jti` хранятся в Redis) |
+| Временные (одноразовые) e-mail отклоняются (сверх ТЗ) | Два публичных списка одноразовых доменов (объединённые), ручные block/allow-списки, проверяются домен и все его родители (`x@eu.yopmail.com`). Список в памяти, кеш в Redis на 7 дней, обновление раз в сутки в фоне; пока список не загружен, проверка пропускается. Ошибка `disposable_email_not_allowed` до проверки капчи, на фронте — под полем E-mail |
 | Разрешённые теги `<a href title>`, `<code>`, `<i>`, `<strong>`, проверка закрытия, валидный XHTML | Парсер на регулярных выражениях со стеком тегов (`back/src/shared/utils/comment-html.util.ts`), его копия на фронте |
 | Панель кнопок `[i] [strong] [code] [a]` | Оборачивает выделенный текст в textarea |
 | Предпросмотр без перезагрузки | `POST /comments/preview`: сервер возвращает текст ровно в том виде, в каком он будет сохранён |
@@ -85,8 +86,8 @@ docker compose up -d --build front   # пересобрать один серв�
 ### Тесты в Docker
 
 ```bash
-docker compose --profile test run --rm back-test    # unit (433) + e2e (90) бэкенда
-docker compose --profile test run --rm front-test   # unit фронтенда (308)
+docker compose --profile test run --rm back-test    # unit (467) + e2e (91) бэкенда
+docker compose --profile test run --rm front-test   # unit фронтенда (309)
 ```
 
 `back-test` сам создаёт базу `comments_test` и работает с отдельной Redis DB и отдельным индексом Meilisearch, рабочие данные не трогает. Браузерные e2e (Playwright) и нагрузочные тесты запускаются локально — см. раздел «Тесты» ниже.
@@ -160,9 +161,9 @@ $C exec postgres psql -U comments comments
 
 | Вид | Где | Команда | Что внутри |
 |---|---|---|---|
-| Unit бэкенда | `back/src/**/*.spec.ts` | `cd back && npm test` (`npm run test:cov` — покрытие) | 433 теста, покрытие 100% строк/веток/функций; внешние сервисы замоканы, `sharp` и `ffmpeg` настоящие |
-| Unit фронтенда | `front/src/**/*.test.ts(x)` | `cd front && npm test` (`npm run test:cov`) | 308 тестов (Vitest + Testing Library), покрытие ~99% |
-| E2E бэкенда | `back/test/*.e2e-spec.ts` | `cd back && npm run test:e2e` | 90 тестов: всё приложение против настоящих Postgres/Redis/Meilisearch, S3 в памяти; капча, валидация, XSS, SQL-инъекции, каскад, пагинация, сортировки, фолбэк на Postgres, файлы и видео, голоса, socket.io |
+| Unit бэкенда | `back/src/**/*.spec.ts` | `cd back && npm test` (`npm run test:cov` — покрытие) | 467 тестов, покрытие 100% строк/веток/функций; внешние сервисы замоканы, `sharp` и `ffmpeg` настоящие |
+| Unit фронтенда | `front/src/**/*.test.ts(x)` | `cd front && npm test` (`npm run test:cov`) | 309 тестов (Vitest + Testing Library), покрытие ~99% |
+| E2E бэкенда | `back/test/*.e2e-spec.ts` | `cd back && npm run test:e2e` | 91 тест: всё приложение против настоящих Postgres/Redis/Meilisearch, S3 в памяти; капча, валидация, XSS, SQL-инъекции, каскад, пагинация, сортировки, фолбэк на Postgres, файлы и видео, голоса, socket.io |
 | E2E в браузере | `e2e/tests/*.spec.ts` | `cd e2e && npm install && npm test` | 22 сценария Playwright (системный Chrome, десктоп + мобильный): форма, редактор, предпросмотр, ответы, сортировка, пагинация, лайки, загрузка в настоящий S3 (картинка, txt, видео), realtime между вкладками, XSS |
 | Нагрузочные | `load/` | см. [`load/README.md`](load/README.md) | 1M комментариев: чтение, запись, голоса, WebSocket fan-out, результаты и выводы |
 

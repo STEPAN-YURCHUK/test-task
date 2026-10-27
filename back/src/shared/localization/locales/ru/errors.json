@@ -30,6 +30,7 @@
     "text_malformed_tag": "Некорректный тег",
     "captcha_expired": "CAPTCHA устарела, обновите её",
     "captcha_invalid": "Неверная CAPTCHA",
+    "disposable_email_not_allowed": "Временные почтовые адреса не принимаются. Используйте свою обычную почту",
     "comment_not_found": "Комментарий не найден",
     "parent_comment_not_found": "Комментарий, на который вы отвечаете, не существует",
     "file_type_not_allowed": "Допустимые файлы: JPG, GIF, PNG, TXT, MP4, MOV, WEBM, MKV, AVI",
