@@ -85,8 +85,8 @@ docker compose up -d --build front   # пересобрать один серв�
 ### Тесты в Docker
 
 ```bash
-docker compose --profile test run --rm back-test    # unit (405) + e2e (82) бэкенда
-docker compose --profile test run --rm front-test   # unit фронтенда (268)
+docker compose --profile test run --rm back-test    # unit (433) + e2e (90) бэкенда
+docker compose --profile test run --rm front-test   # unit фронтенда (308)
 ```
 
 `back-test` сам создаёт базу `comments_test` и работает с отдельной Redis DB и отдельным индексом Meilisearch, рабочие данные не трогает. Браузерные e2e (Playwright) и нагрузочные тесты запускаются локально — см. раздел «Тесты» ниже.
@@ -122,41 +122,47 @@ npm run dev -- -p 3001             # http://localhost:3001
 3. Поставьте перед `front` и `back` reverse proxy с HTTPS (nginx, Caddy, Traefik). Бэкенд доверяет `X-Forwarded-For` от локальных и приватных адресов, поэтому IP пользователей в комментариях будут настоящими.
 4. `API_DOCS_ENABLED=false`, если Swagger на сервере не нужен.
 
-### Деплой на Laravel Forge (без Docker)
+### Деплой на Laravel Forge (в Docker)
 
-Приложение работает на одном домене. nginx отправляет `/api` и `/socket.io` бэкенду (PM2, порт 4009), всё остальное — фронту (PM2, порт 4008). Готовые конфиги лежат в `deploy/forge/`.
+На сервере всё приложение работает в Docker: Postgres, Redis, Meilisearch, S3-хранилище (SeaweedFS), бэкенд и фронт. Используются `docker-compose.yml` и надстройка `docker-compose.prod.yml`. Готовые файлы для Forge лежат в `deploy/forge/`.
 
-**Один раз на сервере** (по SSH под пользователем `forge`):
+- Наружу ничего не открыто. У баз нет портов на хосте, а фронт, API и хранилище слушают только `127.0.0.1`. nginx Forge проксирует запросы по путям: `/api` и `/socket.io` → бэкенд (`:4009`), `/storage` → хранилище (`:4010`), всё остальное → фронт (`:4008`).
+- Файлы хранятся в SeaweedFS на постоянном томе и отдаются с того же домена (`https://<домен>/storage/...`), поэтому CORS не нужен. Хранилище проверяет подписи ссылок, анонимно разрешено только чтение.
+- Пароли и ключи (Postgres, JWT, Meilisearch, хранилище) deploy-скрипт генерирует сам при первом деплое и хранит в `/home/forge/<домен>/.docker-secrets.env` (права 600), вне папок релизов.
 
-1. Node.js ≥ 22.13: проверьте `node -v`; если версия старее — обновите через `nvm install 22` (или `sudo npm i -g n && sudo n 22`).
-2. ffmpeg для перекодирования видео: `sudo apt-get update && sudo apt-get install -y ffmpeg`.
-3. PostgreSQL: Forge → Databases → создать базу `comments`. Таблицы создаются сами при первом старте.
-4. Redis ставится Forge по умолчанию (`127.0.0.1:6379`).
-5. Meilisearch как демон:
-   ```bash
-   mkdir -p ~/bin ~/meili-data && cd ~/bin && curl -L https://install.meilisearch.com | sh
-   ```
-   Затем Forge → Server → Daemons → New Daemon:
-   `/home/forge/bin/meilisearch --env production --master-key <MEILI_MASTER_KEY> --db-path /home/forge/meili-data --http-addr 127.0.0.1:7700`,
-   пользователь `forge`. Ключ — не короче 16 символов, тот же, что в env. Без Meilisearch список читается из Postgres.
-6. S3-бакет: в CORS разрешите `PUT`, `GET`, `HEAD` с `https://test-task.pp.ua`, откройте заголовок `ETag`.
+**Один раз на сервере** (по SSH):
+
+```bash
+curl -fsSL https://get.docker.com | sudo sh
+sudo usermod -aG docker forge   # затем перелогиниться
+```
 
 **В панели сайта:**
 
-1. Environment — заполнить по шаблону `deploy/forge/forge.env.example` (секреты: `openssl rand -hex 32`).
-2. Deployments → Deploy script — содержимое `deploy/forge/deploy.sh`.
+1. Environment — вставить `deploy/forge/forge.env.example`. Для `test-task.pp.ua` подходит как есть, больше ничего заполнять не нужно.
+2. Deployments → Deploy script — содержимое `deploy/forge/deploy.sh`. Макросы Forge `$CREATE_RELEASE()` и `$ACTIVATE_RELEASE()` должны встречаться в скрипте ровно по одному разу: Forge подставляет только первое вхождение.
 3. Edit Nginx Configuration — заменить блок от `ssl_protocols` до конца на `deploy/forge/nginx.conf`. Строки `listen`, `server_name` и `ssl_*` оставить как есть.
 4. SSL → Let's Encrypt, затем Deploy Now.
 
-Проверка: `pm2 ls` (процессы `site-3464767` и `site-3464767-api` в статусе online), `pm2 logs site-3464767-api`, `https://test-task.pp.ua/api/docs`.
+Образы собираются до переключения релиза: если сборка упала, продолжает работать прежняя версия. Деплой проваливается, если какой-то сервис не стал healthy, и печатает логи бэкенда. Имя compose-проекта фиксировано (`-p test-task`), поэтому тома с данными переживают новые релизы.
+
+Проверка и обслуживание на сервере:
+
+```bash
+cd /home/forge/test-task.pp.ua/current
+C="docker compose -p test-task --env-file /home/forge/test-task.pp.ua/.docker-secrets.env --env-file .env -f docker-compose.yml -f docker-compose.prod.yml"
+$C ps                      # все сервисы healthy
+$C logs -f back            # логи бэкенда
+$C exec postgres psql -U comments comments
+```
 
 ## Тесты
 
 | Вид | Где | Команда | Что внутри |
 |---|---|---|---|
-| Unit бэкенда | `back/src/**/*.spec.ts` | `cd back && npm test` (`npm run test:cov` — покрытие) | 405 тестов, покрытие 100% строк/веток/функций; внешние сервисы замоканы, `sharp` и `ffmpeg` настоящие |
-| Unit фронтенда | `front/src/**/*.test.ts(x)` | `cd front && npm test` (`npm run test:cov`) | 268 тестов (Vitest + Testing Library), покрытие ~99% |
-| E2E бэкенда | `back/test/*.e2e-spec.ts` | `cd back && npm run test:e2e` | 82 теста: всё приложение против настоящих Postgres/Redis/Meilisearch, S3 в памяти; капча, валидация, XSS, SQL-инъекции, каскад, пагинация, сортировки, фолбэк на Postgres, файлы и видео, голоса, socket.io |
+| Unit бэкенда | `back/src/**/*.spec.ts` | `cd back && npm test` (`npm run test:cov` — покрытие) | 433 теста, покрытие 100% строк/веток/функций; внешние сервисы замоканы, `sharp` и `ffmpeg` настоящие |
+| Unit фронтенда | `front/src/**/*.test.ts(x)` | `cd front && npm test` (`npm run test:cov`) | 308 тестов (Vitest + Testing Library), покрытие ~99% |
+| E2E бэкенда | `back/test/*.e2e-spec.ts` | `cd back && npm run test:e2e` | 90 тестов: всё приложение против настоящих Postgres/Redis/Meilisearch, S3 в памяти; капча, валидация, XSS, SQL-инъекции, каскад, пагинация, сортировки, фолбэк на Postgres, файлы и видео, голоса, socket.io |
 | E2E в браузере | `e2e/tests/*.spec.ts` | `cd e2e && npm install && npm test` | 22 сценария Playwright (системный Chrome, десктоп + мобильный): форма, редактор, предпросмотр, ответы, сортировка, пагинация, лайки, загрузка в настоящий S3 (картинка, txt, видео), realtime между вкладками, XSS |
 | Нагрузочные | `load/` | см. [`load/README.md`](load/README.md) | 1M комментариев: чтение, запись, голоса, WebSocket fan-out, результаты и выводы |
 
