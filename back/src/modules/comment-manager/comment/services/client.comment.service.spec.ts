@@ -21,6 +21,7 @@ const setup = () => {
         captcha: { verify: jest.fn() },
         users: { upsert: jest.fn().mockResolvedValue({ uuid: 'u1' }) },
         database: { withTransaction: jest.fn((_ctx, fn) => fn(trx)) },
+        disposableEmail: { checkNotDisposableOrThrow: jest.fn() },
         events: { emit: jest.fn() },
     };
     const service = new ClientCommentService(
@@ -31,6 +32,7 @@ const setup = () => {
         deps.captcha as any,
         deps.users as any,
         deps.database as any,
+        deps.disposableEmail as any,
         deps.events as any,
     );
     return { service, trx, ...deps };
@@ -132,6 +134,17 @@ describe('ClientCommentService', () => {
             const { service, captcha } = setup();
             await expect(service.create({ ...baseInput, file: {} as any, uploadId: 'u' })).rejects.toThrow('conflicting_file_sources');
             expect(captcha.verify).not.toHaveBeenCalled();
+        });
+
+        it('временный e-mail → disposable_email_not_allowed до капчи (одноразовый токен не сгорает)', async () => {
+            const { service, captcha, database, disposableEmail } = setup();
+            disposableEmail.checkNotDisposableOrThrow.mockImplementation(() => {
+                throw new Error('disposable_email_not_allowed');
+            });
+            await expect(service.create({ ...baseInput, email: 'a@mailinator.com' })).rejects.toThrow('disposable_email_not_allowed');
+            expect(disposableEmail.checkNotDisposableOrThrow).toHaveBeenCalledWith('a@mailinator.com');
+            expect(captcha.verify).not.toHaveBeenCalled();
+            expect(database.withTransaction).not.toHaveBeenCalled();
         });
 
         it('ошибка капчи прерывает создание', async () => {

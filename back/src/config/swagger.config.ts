@@ -20,6 +20,7 @@ stored together with the IP address and User-Agent of every comment. All tags ar
 4. Every open client receives the new comment over WebSocket (\`comment_created\`).
 
 The CAPTCHA token is **single-use**: after any attempt, successful or not, request a new image.
+Temporary (disposable) e-mail domains are rejected with \`disposable_email_not_allowed\` before the CAPTCHA is checked.
 
 ## Message text
 

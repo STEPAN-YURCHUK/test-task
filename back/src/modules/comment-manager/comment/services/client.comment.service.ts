@@ -1,6 +1,7 @@
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { DatabaseService } from 'src/infrastructure/database/services/database.service';
+import { DisposableEmailService } from 'src/infrastructure/disposable-email/services/disposable-email.service';
 import { ClientCaptchaService } from 'src/modules/captcha-manager/captcha/services/client.captcha.service';
 import { ClientUserRepository } from 'src/modules/user-manager/user/repositories/client.user.repository';
 import { sanitizeCommentHtml } from 'src/shared/utils/comment-html.util';
@@ -27,6 +28,7 @@ export class ClientCommentService {
         private readonly clientCaptchaService: ClientCaptchaService,
         private readonly clientUserRepository: ClientUserRepository,
         private readonly databaseService: DatabaseService,
+        private readonly disposableEmailService: DisposableEmailService,
         private readonly eventEmitter: EventEmitter2,
     ) {}
 
@@ -77,6 +79,8 @@ export class ClientCommentService {
 
     async create(input: ClientCreateCommentInput) {
         if (input.file && input.uploadId) throw new HttpException('conflicting_file_sources', HttpStatus.BAD_REQUEST);
+        // до капчи: токен капчи одноразовый, не тратим его на заведомо отклонённый адрес
+        this.disposableEmailService.checkNotDisposableOrThrow(input.email);
 
         await this.clientCaptchaService.verify({ token: input.captchaToken, answer: input.captcha });
 

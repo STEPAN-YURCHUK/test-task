@@ -30,6 +30,7 @@
     "text_malformed_tag": "Malformed tag",
     "captcha_expired": "CAPTCHA expired, please refresh it",
     "captcha_invalid": "Wrong CAPTCHA",
+    "disposable_email_not_allowed": "Temporary email addresses are not allowed. Please use your regular email",
     "comment_not_found": "Comment not found",
     "parent_comment_not_found": "The comment you are replying to does not exist",
     "file_type_not_allowed": "Allowed files: JPG, GIF, PNG, TXT, MP4, MOV, WEBM, MKV, AVI",

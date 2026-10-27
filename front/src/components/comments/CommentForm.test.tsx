@@ -160,6 +160,18 @@ describe('CommentForm', () => {
     await waitFor(() => expect(getCaptcha).toHaveBeenCalledTimes(2));
   });
 
+  it('временный e-mail → ошибка под полем E-mail, а не общим алертом', async () => {
+    createComment.mockRejectedValue(new ApiError(400, 'disposable_email_not_allowed', 'Временные почтовые адреса не принимаются'));
+    render(<CommentForm onCreated={vi.fn()} />);
+    await fillValid();
+    await userEvent.click(screen.getByRole('button', { name: 'Отправить' }));
+
+    const error = await screen.findByText('Временные почтовые адреса не принимаются');
+    expect(error.closest('label')).toContainElement(field('john@example.com'));
+    expect(field('john@example.com')).toHaveClass('invalid');
+    expect(document.querySelector('.alert')).toBeNull();
+  });
+
   it('показанные ошибки проверки, предпросмотра и отправки переводятся при смене языка', async () => {
     createComment.mockRejectedValueOnce(new Error('boom'));
     vi.spyOn(api, 'preview').mockRejectedValue(new Error('offline'));
