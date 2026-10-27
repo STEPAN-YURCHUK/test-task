@@ -1,0 +1,23 @@
+// Поля файла, которые отдаются вместе с сущностью (без modelUuid/modelType/modelColumn)
+export const FILE_PUBLIC_ATTRIBUTES = [
+    'uuid',
+    'type',
+    'path',
+    'originalName',
+    'mimeType',
+    'size',
+    'width',
+    'height',
+    'smallPath',
+    'mediumPath',
+    'webpSmallPath',
+    'webpMediumPath',
+    'webpOriginalPath',
+    'smallWidth',
+    'smallHeight',
+    'mediumWidth',
+    'mediumHeight',
+    'duration',
+    'posterPath',
+    'webpPosterPath',
+];
