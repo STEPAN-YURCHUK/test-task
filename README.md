@@ -122,6 +122,34 @@ npm run dev -- -p 3001             # http://localhost:3001
 3. Поставьте перед `front` и `back` reverse proxy с HTTPS (nginx, Caddy, Traefik). Бэкенд доверяет `X-Forwarded-For` от локальных и приватных адресов, поэтому IP пользователей в комментариях будут настоящими.
 4. `API_DOCS_ENABLED=false`, если Swagger на сервере не нужен.
 
+### Деплой на Laravel Forge (без Docker)
+
+Приложение работает на одном домене. nginx отправляет `/api` и `/socket.io` бэкенду (PM2, порт 4009), всё остальное — фронту (PM2, порт 4008). Готовые конфиги лежат в `deploy/forge/`.
+
+**Один раз на сервере** (по SSH под пользователем `forge`):
+
+1. Node.js ≥ 22.13: проверьте `node -v`; если версия старее — обновите через `nvm install 22` (или `sudo npm i -g n && sudo n 22`).
+2. ffmpeg для перекодирования видео: `sudo apt-get update && sudo apt-get install -y ffmpeg`.
+3. PostgreSQL: Forge → Databases → создать базу `comments`. Таблицы создаются сами при первом старте.
+4. Redis ставится Forge по умолчанию (`127.0.0.1:6379`).
+5. Meilisearch как демон:
+   ```bash
+   mkdir -p ~/bin ~/meili-data && cd ~/bin && curl -L https://install.meilisearch.com | sh
+   ```
+   Затем Forge → Server → Daemons → New Daemon:
+   `/home/forge/bin/meilisearch --env production --master-key <MEILI_MASTER_KEY> --db-path /home/forge/meili-data --http-addr 127.0.0.1:7700`,
+   пользователь `forge`. Ключ — не короче 16 символов, тот же, что в env. Без Meilisearch список читается из Postgres.
+6. S3-бакет: в CORS разрешите `PUT`, `GET`, `HEAD` с `https://test-task.pp.ua`, откройте заголовок `ETag`.
+
+**В панели сайта:**
+
+1. Environment — заполнить по шаблону `deploy/forge/forge.env.example` (секреты: `openssl rand -hex 32`).
+2. Deployments → Deploy script — содержимое `deploy/forge/deploy.sh`.
+3. Edit Nginx Configuration — заменить блок от `ssl_protocols` до конца на `deploy/forge/nginx.conf`. Строки `listen`, `server_name` и `ssl_*` оставить как есть.
+4. SSL → Let's Encrypt, затем Deploy Now.
+
+Проверка: `pm2 ls` (процессы `site-3464767` и `site-3464767-api` в статусе online), `pm2 logs site-3464767-api`, `https://test-task.pp.ua/api/docs`.
+
 ## Тесты
 
 | Вид | Где | Команда | Что внутри |
