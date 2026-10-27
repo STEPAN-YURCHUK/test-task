@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: "standalone",
+  // standalone — только для Docker-образа (NEXT_OUTPUT=standalone в Dockerfile); на Forge работает обычный next start
+  output: process.env.NEXT_OUTPUT === "standalone" ? "standalone" : undefined,
   // e2e-сборка (NEXT_DIST_DIR=.next-e2e) не должна затирать сборку/кеш dev-сервера
   distDir: process.env.NEXT_DIST_DIR || ".next",
   cacheComponents: true,
