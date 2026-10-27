@@ -943,6 +943,16 @@
   transition: background 0.15s, color 0.15s;
 }
 
+/* подсветка лайка/дизлайка — половинки одной пилюли: у разделителя углы скруглены меньше.
+   Внешний радиус — не 999px: браузер ужимает все радиусы стороны пропорционально, и внутренние стали бы прямыми */
+.voteButton:first-child {
+  border-radius: 14px 8px 8px 14px;
+}
+
+.voteButton:last-child {
+  border-radius: 8px 14px 14px 8px;
+}
+
 .votesCompact .voteButton {
   padding: 0 8px;
   font-size: 12.5px;
@@ -1530,7 +1540,6 @@
   place-items: center;
   width: 44px;
   height: 44px;
-  padding-left: 3px;
   border-radius: 50%;
   background: rgb(10 10 20 / 0.55);
   color: #fff;
