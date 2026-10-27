@@ -1,0 +1,11 @@
+/dist
+/node_modules
+/coverage
+.env
+.development.env
+.production.env
+*.log
+.DS_Store
+.test.env
+/dist-e2e
+.load.env

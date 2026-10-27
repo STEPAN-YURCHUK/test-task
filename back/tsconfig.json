@@ -1,0 +1,27 @@
+{
+    "compilerOptions": {
+        "target": "ES2020",
+        "lib": ["ES2021"],
+        "module": "commonjs",
+        "declaration": true,
+        "removeComments": true,
+        "emitDecoratorMetadata": true,
+        "experimentalDecorators": true,
+        "allowSyntheticDefaultImports": true,
+        "sourceMap": true,
+        "outDir": "./dist",
+        "baseUrl": "./",
+        // sharp@0.35 публикует ESM-типы в "types", а рантайм под commonjs — index.cjs без .default;
+        // без esModuleInterop берём CJS-декларацию напрямую, чтобы `import * as sharp` оставался вызываемым
+        "paths": {
+            "sharp": ["node_modules/sharp/dist/index.d.cts"]
+        },
+        "incremental": true,
+        "skipLibCheck": true,
+        "strictNullChecks": false,
+        "noImplicitAny": false,
+        "strictBindCallApply": false,
+        "forceConsistentCasingInFileNames": false,
+        "noFallthroughCasesInSwitch": false
+    }
+}
