@@ -17,14 +17,18 @@ COMPOSE_VERSION=$(docker compose version --short 2>/dev/null | sed 's/^v//')
 printf '%s\n2.24.0\n' "$COMPOSE_VERSION" | sort -V -C 2>/dev/null && [ "$COMPOSE_VERSION" != "2.24.0" ] \
     && fail "нужен Docker Compose ≥ 2.24, установлен $COMPOSE_VERSION: sudo apt-get install -y docker-compose-plugin"
 
-# Env сайта из вкладки Environment
+# Корень сайта (/home/forge/<домен>) — родитель папки releases/. $FORGE_SITE_PATH указывает на current/,
+# то есть внутрь конкретного релиза: то, что лежит там, пропадёт со следующим деплоем
+SITE_ROOT=$(dirname "$(dirname "$FORGE_RELEASE_DIRECTORY")")
+
+# Env сайта из вкладки Environment (Forge линкует его в релиз)
 ENV_FILE="$FORGE_RELEASE_DIRECTORY/.env"
-[ -f "$ENV_FILE" ] || ENV_FILE="$FORGE_SITE_PATH/.env"
+[ -f "$ENV_FILE" ] || ENV_FILE="$SITE_ROOT/.env"
 [ -f "$ENV_FILE" ] || fail "env-файл не найден: заполните вкладку Environment в Forge"
 
 # Секреты создаются один раз и хранятся вне релизов: пароли Postgres и хранилища должны совпадать с уже созданными данными.
 # Недостающие дописываются. Значение, заданное в Environment, важнее сгенерированного (--env-file подключается позже)
-SECRETS_FILE="$FORGE_SITE_PATH/.docker-secrets.env"
+SECRETS_FILE="$SITE_ROOT/.docker-secrets.env"
 ensure_secret() {
     grep -q "^$1=" "$SECRETS_FILE" 2>/dev/null && return
     (umask 077; echo "$1=$(openssl rand -hex "$2")" >> "$SECRETS_FILE")
