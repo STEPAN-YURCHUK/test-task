@@ -1,0 +1,141 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgb(8 8 14 / 0.7);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  animation: fadeIn 0.2s ease-out;
+}
+
+.overlay.closing {
+  animation: fadeOut 0.2s ease-in forwards;
+}
+
+.frame {
+  position: relative;
+  min-width: 200px;
+  min-height: 140px;
+  max-width: min(92vw, 900px);
+  padding: 10px 10px 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-lg);
+  animation: zoomIn 0.28s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+}
+
+.closing .frame {
+  animation: zoomOut 0.2s ease-in forwards;
+}
+
+.image {
+  display: block;
+  max-width: 100%;
+  max-height: 75vh;
+  min-width: 320px;
+  border-radius: var(--radius);
+  image-rendering: auto;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.video {
+  display: block;
+  width: min(80vw, 860px);
+  max-height: 75vh;
+  border-radius: var(--radius);
+  background: #000;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.text {
+  max-height: 70vh;
+  width: min(80vw, 760px);
+  margin: 0;
+  padding: 16px;
+  overflow: auto;
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  font: 13px/1.55 var(--font-mono);
+  white-space: pre-wrap;
+  word-break: break-word;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.visible {
+  opacity: 1;
+}
+
+.caption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 2px 12px;
+  color: var(--text-2);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.close {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--surface-2);
+  color: var(--text-2);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.close:hover {
+  background: var(--surface-3);
+  color: var(--text);
+}
+
+.spinner {
+  position: absolute;
+  top: calc(50% - 30px);
+  left: calc(50% - 16px);
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--surface-3);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+}
+
+@keyframes fadeOut {
+  to { opacity: 0; }
+}
+
+@keyframes zoomIn {
+  from { opacity: 0; transform: scale(0.85); }
+}
+
+@keyframes zoomOut {
+  to { opacity: 0; transform: scale(0.9); }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 480px) {
+  .image {
+    min-width: 0;
+  }
+}
